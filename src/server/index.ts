@@ -5,8 +5,9 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import type { JobSummary, ParseOptions } from "../shared/types";
 import { createJob, expireOldJobs, getJob, updateJob, type JobRecord } from "./jobs";
-import { toMarkdown, type LiteParseResult } from "./markdown";
+import { processedToMarkdown, type LiteParseResult } from "./markdown";
 import { parsePdf } from "./parser";
+import { postProcessResult } from "./postprocess";
 import { MAX_UPLOAD_BYTES, normalizeParseOptions, validatePdfUpload } from "./validation";
 
 const JOB_TTL_MS = 60 * 60 * 1000;
@@ -187,10 +188,27 @@ function formatResults(input: {
   parseMs: number;
   result: LiteParseResult;
 }) {
+  const processed = postProcessResult(input.result);
+  const json = {
+    metadata: {
+      sourceFile: input.fileName,
+      parser: "run-llama/liteparse",
+      postProcessor: "liteparse-pdf-studio",
+      pagesParsed: processed.pages.length,
+      ocrEnabled: input.options.ocrEnabled,
+      ocrLanguage: input.options.ocrLanguage,
+      dpi: input.options.dpi,
+      parseMs: input.parseMs,
+    },
+    cleanedText: processed.cleanedText,
+    rawText: processed.rawText,
+    pages: processed.pages,
+  };
+
   return {
-    md: toMarkdown(input),
-    text: input.result.text,
-    json: JSON.stringify(input.result, null, 2),
+    md: processedToMarkdown({ ...input, processed }),
+    text: processed.cleanedText,
+    json: JSON.stringify(json, null, 2),
   };
 }
 

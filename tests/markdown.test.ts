@@ -16,7 +16,7 @@ describe("toMarkdown", () => {
       result: {
         text: "Page one\n\nPage two",
         pages: [
-          { pageNum: 1, width: 612, height: 792, text: "Page one", textItems: [] },
+          { pageNum: 1, width: 612, height: 792, text: "Executive    Summary\n\nPage    one", textItems: [] },
           { pageNum: 2, width: 612, height: 792, text: "Page two", textItems: [] },
         ],
       },
@@ -32,11 +32,13 @@ describe("toMarkdown", () => {
       DPI: 150
       Parse time: 42 ms
 
-      > Note: This markdown is app-generated from LiteParse text and JSON output for LLM-ready reading.
+      > Note: This markdown is post-processed from LiteParse text/JSON output. Raw page text remains available in the JSON download.
 
       ---
 
       ## Page 1
+
+      ### Executive Summary
 
       Page one
 

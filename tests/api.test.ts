@@ -74,6 +74,22 @@ describe("API", () => {
     expect(markdownResponse.status).toBe(200);
     expect(markdownResponse.headers.get("content-disposition")).toContain("sample.md");
     await expect(markdownResponse.text()).resolves.toContain("# Parsed Document");
+
+    const jsonResponse = await fetch(`${baseUrl}/api/jobs/${created.jobId}/result?format=json`);
+    expect(jsonResponse.status).toBe(200);
+    const parsedJson = await jsonResponse.json();
+    expect(parsedJson).toMatchObject({
+      metadata: {
+        sourceFile: "sample.pdf",
+        postProcessor: "liteparse-pdf-studio",
+      },
+      cleanedText: expect.stringContaining("Page one"),
+      rawText: expect.stringContaining("Page one"),
+    });
+    expect(parsedJson.pages[0]).toMatchObject({
+      cleanedText: "Page one",
+      rawText: "Page one",
+    });
   });
 
   async function uploadPdf(): Promise<Response> {

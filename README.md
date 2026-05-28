@@ -11,7 +11,9 @@ The app is intentionally a working tool first: open it, upload a PDF, choose par
 - Parser: `@llamaindex/liteparse`
 - Tests: Vitest and Playwright
 
-LiteParse runs locally and returns layout-preserved text plus structured page data with bounding boxes. This app generates markdown from that LiteParse result. LiteParse itself outputs text/JSON; it is not a native semantic markdown/table reconstruction engine.
+LiteParse runs locally and returns layout-preserved text plus structured page data with bounding boxes. This app adds a conservative post-processing layer that normalizes noisy spacing, repairs common hyphenated line wraps, removes simple layout symbols, promotes detected section titles into markdown headings, and keeps raw page text available in JSON for auditability.
+
+LiteParse itself outputs text/JSON; this app turns that result into cleaner markdown/text/JSON for LLM-ready use. It is still not a full semantic table or chart reconstruction engine.
 
 ## Local Setup
 
@@ -39,7 +41,8 @@ Open the printed local URL. The default server port is `4174`.
 - Server max pages: 100.
 - OCR is enabled by default.
 - Remote URL ingestion is intentionally disabled.
-- Markdown is deterministic app-generated output over LiteParse text/page data.
+- Markdown and text downloads are deterministic post-processed output over LiteParse text/page data.
+- JSON downloads include cleaned text, raw text, page dimensions, and raw text items.
 
 ## Privacy And Safety
 
