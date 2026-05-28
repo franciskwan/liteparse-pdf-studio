@@ -28,7 +28,9 @@ test("renders controls and exercises upload, polling, preview, and downloads", a
               parseMs: 42,
               markdownChars: 40,
               rawTextChars: 21,
-              ocrEnabled: true
+              ocrEnabled: true,
+              outputProfile: "rag",
+              chunkCount: 2
             }
           : undefined
       })
@@ -52,7 +54,7 @@ test("renders controls and exercises upload, polling, preview, and downloads", a
   await page.route("**/api/jobs/job-smoke/result?format=json", async (route) => {
     await route.fulfill({
       contentType: "application/json",
-      body: JSON.stringify({ text: "Smoke test JSON", pages: [{ pageNum: 1 }] })
+      body: JSON.stringify({ cleanedText: "Smoke test JSON", chunks: [{ id: "chunk-001", pageStart: 1 }] })
     });
   });
 
@@ -61,6 +63,8 @@ test("renders controls and exercises upload, polling, preview, and downloads", a
   await expect(page.getByRole("heading", { name: "LiteParse PDF Studio" })).toBeVisible();
   await expect(page.getByText("Drop PDF here")).toBeVisible();
   await expect(page.getByLabel("OCR language")).toBeVisible();
+  await expect(page.getByText("Output profile")).toBeVisible();
+  await expect(page.getByText("RAG chunks")).toBeVisible();
   await expect(page.getByLabel("Target pages")).toBeVisible();
   await expect(page.getByLabel("Max pages")).toBeVisible();
   await expect(page.getByLabel("DPI", { exact: true })).toBeVisible();
@@ -76,16 +80,17 @@ test("renders controls and exercises upload, polling, preview, and downloads", a
   });
 
   await expect(page.getByTestId("selected-file")).toContainText("sample.pdf");
+  await page.getByLabel("RAG chunks").check();
   await page.getByRole("button", { name: "Parse PDF" }).click();
 
   await expect(page.getByText("ready: Parsed and formatted.")).toBeVisible();
   await expect(page.getByTestId("preview-output")).toContainText("# Parsed Document");
 
-  await page.getByRole("tab", { name: "Raw Text" }).click();
+  await page.getByRole("tab", { name: "Clean Text" }).click();
   await expect(page.getByTestId("preview-output")).toContainText("Smoke test raw text.");
 
   await page.getByRole("tab", { name: "JSON" }).click();
-  await expect(page.getByTestId("preview-output")).toContainText('"text": "Smoke test JSON"');
+  await expect(page.getByTestId("preview-output")).toContainText('"cleanedText": "Smoke test JSON"');
 
   await page.getByRole("button", { name: "Clear" }).first().click();
   await expect(page.getByTestId("selected-file")).toContainText("No file selected");

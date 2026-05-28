@@ -67,6 +67,8 @@ describe("API", () => {
         fileName: "sample.pdf",
         pagesParsed: 2,
         ocrEnabled: true,
+        outputProfile: "rag",
+        chunkCount: 1,
       },
     });
 
@@ -82,9 +84,14 @@ describe("API", () => {
       metadata: {
         sourceFile: "sample.pdf",
         postProcessor: "liteparse-pdf-studio",
+        outputProfile: "rag",
+        chunkCount: 1,
       },
       cleanedText: expect.stringContaining("Page one"),
       rawText: expect.stringContaining("Page one"),
+      chunks: expect.arrayContaining([
+        expect.objectContaining({ id: "chunk-001", pageStart: 1, pageEnd: 2 }),
+      ]),
     });
     expect(parsedJson.pages[0]).toMatchObject({
       cleanedText: "Page one",
@@ -99,6 +106,7 @@ describe("API", () => {
     form.append("ocrLanguage", "eng");
     form.append("maxPages", "100");
     form.append("dpi", "150");
+    form.append("outputProfile", "rag");
 
     return fetch(`${baseUrl}/api/jobs`, {
       method: "POST",

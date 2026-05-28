@@ -169,6 +169,8 @@ async function runParseLifecycle(
         markdownChars: results.md.length,
         rawTextChars: results.text.length,
         ocrEnabled: options.ocrEnabled,
+        outputProfile: options.outputProfile,
+        chunkCount: results.chunkCount,
       },
       results,
     });
@@ -199,9 +201,12 @@ function formatResults(input: {
       ocrLanguage: input.options.ocrLanguage,
       dpi: input.options.dpi,
       parseMs: input.parseMs,
+      outputProfile: input.options.outputProfile,
+      chunkCount: processed.chunks.length,
     },
     cleanedText: processed.cleanedText,
     rawText: processed.rawText,
+    chunks: processed.chunks,
     pages: processed.pages,
   };
 
@@ -209,6 +214,7 @@ function formatResults(input: {
     md: processedToMarkdown({ ...input, processed }),
     text: processed.cleanedText,
     json: JSON.stringify(json, null, 2),
+    chunkCount: processed.chunks.length,
   };
 }
 

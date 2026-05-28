@@ -38,5 +38,14 @@ describe("postProcessResult", () => {
       rawText: "Raw    page",
       cleanedText: "Raw page",
     });
+    expect(processed.chunks).toEqual([
+      {
+        id: "chunk-001",
+        pageStart: 1,
+        pageEnd: 1,
+        text: "Raw page",
+        charCount: 8,
+      },
+    ]);
   });
 });

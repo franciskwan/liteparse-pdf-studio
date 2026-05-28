@@ -9,11 +9,23 @@ export interface ProcessedPage {
   textItems: LiteParseResult["pages"][number]["textItems"];
 }
 
+export interface DocumentChunk {
+  id: string;
+  pageStart: number;
+  pageEnd: number;
+  text: string;
+  charCount: number;
+}
+
 export interface ProcessedDocument {
   rawText: string;
   cleanedText: string;
   pages: ProcessedPage[];
+  chunks: DocumentChunk[];
 }
+
+const TARGET_CHUNK_CHARS = 1400;
+const MIN_CHUNK_CHARS = 400;
 
 const BULLET_PATTERN = /^([-*+]|[0-9]+[.)]|[A-Z][.)])\s+/;
 const ENDS_SENTENCE_PATTERN = /[.!?:;。！？：；)"'\]]$/;
@@ -32,6 +44,7 @@ export function postProcessResult(result: LiteParseResult): ProcessedDocument {
     rawText: result.text,
     cleanedText: pages.map((page) => page.cleanedText).filter(Boolean).join("\n\n"),
     pages,
+    chunks: buildChunks(pages),
   };
 }
 
@@ -112,4 +125,46 @@ function pushBlank(lines: string[]): void {
   if (lines.length > 0 && lines[lines.length - 1] !== "") {
     lines.push("");
   }
+}
+
+function buildChunks(pages: ProcessedPage[]): DocumentChunk[] {
+  const chunks: DocumentChunk[] = [];
+  let currentText = "";
+  let pageStart = 0;
+  let pageEnd = 0;
+
+  for (const page of pages) {
+    const blocks = page.cleanedText.split(/\n{2,}/).map((block) => block.trim()).filter(Boolean);
+    for (const block of blocks) {
+      if (!currentText) {
+        pageStart = page.pageNum;
+      }
+
+      const candidate = currentText ? `${currentText}\n\n${block}` : block;
+      if (candidate.length > TARGET_CHUNK_CHARS && currentText.length >= MIN_CHUNK_CHARS) {
+        chunks.push(createChunk(chunks.length + 1, pageStart, pageEnd, currentText));
+        currentText = block;
+        pageStart = page.pageNum;
+      } else {
+        currentText = candidate;
+      }
+      pageEnd = page.pageNum;
+    }
+  }
+
+  if (currentText) {
+    chunks.push(createChunk(chunks.length + 1, pageStart, pageEnd, currentText));
+  }
+
+  return chunks;
+}
+
+function createChunk(index: number, pageStart: number, pageEnd: number, text: string): DocumentChunk {
+  return {
+    id: `chunk-${String(index).padStart(3, "0")}`,
+    pageStart,
+    pageEnd,
+    text,
+    charCount: text.length,
+  };
 }

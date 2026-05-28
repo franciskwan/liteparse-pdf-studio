@@ -29,10 +29,11 @@ Open the printed local URL. The default server port is `4174`.
 ## Usage
 
 1. Select or drag in a PDF.
-2. Adjust OCR, page range, max pages, DPI, and small-text settings.
-3. Click `Parse PDF`.
-4. Preview Markdown, Raw Text, or JSON.
-5. Download `.md`, `.txt`, or `.json`.
+2. Choose `Reading` for page-by-page markdown or `RAG chunks` for chunk-indexed output with source-page metadata.
+3. Adjust OCR, page range, max pages, DPI, and small-text settings.
+4. Click `Parse PDF`.
+5. Preview Markdown, Clean Text, or JSON.
+6. Download `.md`, `.txt`, or `.json`.
 
 ## MVP Limits
 
@@ -43,6 +44,7 @@ Open the printed local URL. The default server port is `4174`.
 - Remote URL ingestion is intentionally disabled.
 - Markdown and text downloads are deterministic post-processed output over LiteParse text/page data.
 - JSON downloads include cleaned text, raw text, page dimensions, and raw text items.
+- RAG output creates conservative text chunks with chunk IDs, source page ranges, and character counts.
 
 ## Privacy And Safety
 

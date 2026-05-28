@@ -7,6 +7,8 @@ export type JobStatus =
   | "failed"
   | "expired";
 
+export type OutputProfile = "reading" | "rag";
+
 export interface ParseOptions {
   ocrEnabled: boolean;
   ocrLanguage: string;
@@ -14,6 +16,7 @@ export interface ParseOptions {
   maxPages: number;
   dpi: number;
   preserveVerySmallText: boolean;
+  outputProfile: OutputProfile;
 }
 
 export interface JobMetadata {
@@ -23,6 +26,8 @@ export interface JobMetadata {
   markdownChars: number;
   rawTextChars: number;
   ocrEnabled: boolean;
+  outputProfile: OutputProfile;
+  chunkCount: number;
 }
 
 export interface JobSummary {

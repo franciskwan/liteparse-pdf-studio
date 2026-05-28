@@ -11,6 +11,7 @@ describe("toMarkdown", () => {
         maxPages: 2,
         dpi: 150,
         preserveVerySmallText: false,
+        outputProfile: "reading",
       },
       parseMs: 42,
       result: {
@@ -27,7 +28,9 @@ describe("toMarkdown", () => {
 
       Source file: report.pdf
       Parser: run-llama/liteparse
+      Output profile: Reading markdown
       Pages parsed: 2
+      Chunks: 1
       OCR: enabled (eng)
       DPI: 150
       Parse time: 42 ms
@@ -58,6 +61,7 @@ describe("toMarkdown", () => {
         maxPages: 1,
         dpi: 150,
         preserveVerySmallText: false,
+        outputProfile: "reading",
       },
       parseMs: 1,
       result: {
@@ -68,5 +72,66 @@ describe("toMarkdown", () => {
 
     expect(md).toContain("OCR: disabled");
     expect(md).toContain("_No text extracted on this page._");
+  });
+
+  it("can emit RAG chunk markdown with page metadata", () => {
+    const md = toMarkdown({
+      fileName: "rag.pdf",
+      options: {
+        ocrEnabled: false,
+        ocrLanguage: "eng",
+        maxPages: 2,
+        dpi: 150,
+        preserveVerySmallText: false,
+        outputProfile: "rag",
+      },
+      parseMs: 12,
+      result: {
+        text: "Executive Summary\n\nThis is chunkable content.",
+        pages: [
+          {
+            pageNum: 1,
+            width: 612,
+            height: 792,
+            text: "Executive Summary\n\nThis is chunkable content.",
+            textItems: [],
+          },
+        ],
+      },
+    });
+
+    expect(md).toContain("Output profile: RAG chunks");
+    expect(md).toContain("## Chunk Index");
+    expect(md).toContain("- chunk-001: pages 1");
+    expect(md).toContain("Source pages: 1");
+  });
+
+  it("recovers short bullet-like lines that follow extracted bullets", () => {
+    const md = toMarkdown({
+      fileName: "list.pdf",
+      options: {
+        ocrEnabled: false,
+        ocrLanguage: "eng",
+        maxPages: 1,
+        dpi: 150,
+        preserveVerySmallText: false,
+        outputProfile: "reading",
+      },
+      parseMs: 4,
+      result: {
+        text: "- Revenue grew strongly\nMargins improved",
+        pages: [
+          {
+            pageNum: 1,
+            width: 612,
+            height: 792,
+            text: "- Revenue grew strongly\nMargins improved",
+            textItems: [],
+          },
+        ],
+      },
+    });
+
+    expect(md).toContain("- Revenue grew strongly\n- Margins improved");
   });
 });

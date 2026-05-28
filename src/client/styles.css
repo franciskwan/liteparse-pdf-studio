@@ -199,7 +199,8 @@ button:disabled,
 
 .setting-row,
 .field,
-.checkbox-field {
+.checkbox-field,
+.profile-field {
   display: grid;
   gap: 7px;
 }
@@ -213,10 +214,61 @@ button:disabled,
 
 .toggle-row label,
 .field span,
-.checkbox-field span {
+.checkbox-field span,
+.profile-field legend {
   color: #263548;
   font-size: 0.88rem;
   font-weight: 700;
+}
+
+.profile-field {
+  margin: 0;
+  border: 0;
+  border-bottom: 1px solid #e7edf3;
+  padding: 0 0 12px;
+}
+
+.profile-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.profile-option {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 4px 8px;
+  align-items: start;
+  border: 1px solid #cfd8e3;
+  border-radius: 7px;
+  padding: 0.65rem;
+  background: #fbfcfe;
+  cursor: pointer;
+}
+
+.profile-option.active {
+  border-color: #1d6fb8;
+  background: #eaf4ff;
+}
+
+.profile-option input {
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+  accent-color: #1d6fb8;
+}
+
+.profile-option span {
+  color: #1c2d40;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.profile-option small {
+  grid-column: 2;
+  color: #607083;
+  font-size: 0.78rem;
+  line-height: 1.35;
 }
 
 .toggle-row p {
@@ -333,7 +385,7 @@ button:disabled,
 
 .metadata-strip {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 0;
   margin: 0;
   border-bottom: 1px solid #e1e8f0;
@@ -417,7 +469,8 @@ button:disabled,
   }
 
   .split-fields,
-  .action-row {
+  .action-row,
+  .profile-options {
     grid-template-columns: 1fr;
   }
 

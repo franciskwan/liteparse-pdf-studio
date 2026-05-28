@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { DragEvent } from "react";
-import type { JobCreatedResponse, JobSummary, ParseOptions } from "../shared/types";
+import type { JobCreatedResponse, JobSummary, OutputProfile, ParseOptions } from "../shared/types";
 
 type ResultFormat = "md" | "text" | "json";
 
@@ -10,13 +10,19 @@ const initialOptions: ParseOptions & { targetPages: string } = {
   targetPages: "",
   maxPages: 100,
   dpi: 150,
-  preserveVerySmallText: false
+  preserveVerySmallText: false,
+  outputProfile: "reading"
 };
 
 const tabLabels: Record<ResultFormat, string> = {
   md: "Markdown",
-  text: "Raw Text",
+  text: "Clean Text",
   json: "JSON"
+};
+
+const profileLabels: Record<OutputProfile, string> = {
+  reading: "Reading",
+  rag: "RAG chunks"
 };
 
 export function App() {
@@ -155,6 +161,7 @@ export function App() {
     formData.append("maxPages", String(options.maxPages));
     formData.append("dpi", String(options.dpi));
     formData.append("preserveVerySmallText", String(options.preserveVerySmallText));
+    formData.append("outputProfile", options.outputProfile);
 
     try {
       const response = await fetch("/api/jobs", {
@@ -256,6 +263,29 @@ export function App() {
               />
             </div>
 
+            <fieldset className="profile-field">
+              <legend>Output profile</legend>
+              <div className="profile-options">
+                {(["reading", "rag"] as OutputProfile[]).map((profile) => (
+                  <label key={profile} className={options.outputProfile === profile ? "profile-option active" : "profile-option"}>
+                    <input
+                      type="radio"
+                      name="output-profile"
+                      value={profile}
+                      checked={options.outputProfile === profile}
+                      onChange={() => updateOption("outputProfile", profile)}
+                    />
+                    <span>{profileLabels[profile]}</span>
+                    <small>
+                      {profile === "reading"
+                        ? "Clean page-by-page markdown."
+                        : "Chunk index and source-page metadata."}
+                    </small>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+
             <label className="field">
               <span>OCR language</span>
               <input
@@ -352,6 +382,7 @@ export function App() {
                 Copy
               </button>
               <DownloadButton job={job} format="md" label="Download MD" />
+              <DownloadButton job={job} format="text" label="Download TXT" />
               <DownloadButton job={job} format="json" label="Download JSON" />
               <button type="button" onClick={clearAll}>
                 Clear
@@ -421,6 +452,14 @@ function MetadataStrip({ job }: { job: JobSummary | null }) {
       <div>
         <dt>OCR</dt>
         <dd>{job.metadata.ocrEnabled ? "enabled" : "disabled"}</dd>
+      </div>
+      <div>
+        <dt>Profile</dt>
+        <dd>{profileLabels[job.metadata.outputProfile]}</dd>
+      </div>
+      <div>
+        <dt>Chunks</dt>
+        <dd>{job.metadata.chunkCount}</dd>
       </div>
       <div>
         <dt>Characters</dt>

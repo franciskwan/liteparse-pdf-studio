@@ -1,4 +1,4 @@
-import type { ParseOptions } from "../shared/types";
+import type { OutputProfile, ParseOptions } from "../shared/types";
 
 export const MAX_UPLOAD_BYTES = 50 * 1024 * 1024;
 
@@ -8,6 +8,7 @@ const DEFAULT_OPTIONS: ParseOptions = {
   maxPages: 100,
   dpi: 150,
   preserveVerySmallText: false,
+  outputProfile: "reading",
 };
 
 export interface UploadLike {
@@ -52,7 +53,16 @@ export function normalizeParseOptions(input: Record<string, unknown>): ParseOpti
       input.preserveVerySmallText,
       DEFAULT_OPTIONS.preserveVerySmallText,
     ),
+    outputProfile: normalizeOutputProfile(input.outputProfile),
   };
+}
+
+function normalizeOutputProfile(value: unknown): OutputProfile {
+  if (value === "reading" || value === "rag") {
+    return value;
+  }
+
+  return DEFAULT_OPTIONS.outputProfile;
 }
 
 function normalizeOcrLanguage(value: unknown): string {

@@ -9,6 +9,7 @@ describe("normalizeParseOptions", () => {
       maxPages: 100,
       dpi: 150,
       preserveVerySmallText: false,
+      outputProfile: "reading",
     });
   });
 
@@ -21,6 +22,7 @@ describe("normalizeParseOptions", () => {
         maxPages: "20",
         dpi: "200",
         preserveVerySmallText: "true",
+        outputProfile: "rag",
       }),
     ).toEqual({
       ocrEnabled: false,
@@ -29,6 +31,7 @@ describe("normalizeParseOptions", () => {
       maxPages: 20,
       dpi: 200,
       preserveVerySmallText: true,
+      outputProfile: "rag",
     });
   });
 

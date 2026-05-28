@@ -48,7 +48,9 @@ export function processedToMarkdown(input: {
     "",
     `Source file: ${input.fileName}`,
     "Parser: run-llama/liteparse",
+    `Output profile: ${input.options.outputProfile === "rag" ? "RAG chunks" : "Reading markdown"}`,
     `Pages parsed: ${input.processed.pages.length}`,
+    `Chunks: ${input.processed.chunks.length}`,
     `OCR: ${input.options.ocrEnabled ? `enabled (${input.options.ocrLanguage})` : "disabled"}`,
     `DPI: ${input.options.dpi}`,
     `Parse time: ${input.parseMs} ms`,
@@ -59,25 +61,73 @@ export function processedToMarkdown(input: {
     "",
   ];
 
-  const pages = input.processed.pages.flatMap((page) => [
+  const body =
+    input.options.outputProfile === "rag"
+      ? chunksToMarkdown(input.processed.chunks)
+      : pagesToMarkdown(input.processed.pages);
+
+  return `${[...header, ...body].join("\n").trimEnd()}\n`;
+}
+
+function pagesToMarkdown(pages: ProcessedDocument["pages"]): string[] {
+  return pages.flatMap((page) => [
     `## Page ${page.pageNum}`,
     "",
     formatCleanedTextForMarkdown(page.cleanedText) || "_No text extracted on this page._",
     "",
   ]);
+}
 
-  return `${[...header, ...pages].join("\n").trimEnd()}\n`;
+function chunksToMarkdown(chunks: ProcessedDocument["chunks"]): string[] {
+  if (chunks.length === 0) {
+    return ["## Chunks", "", "_No text extracted for chunking._", ""];
+  }
+
+  return [
+    "## Chunk Index",
+    "",
+    ...chunks.map(
+      (chunk) => `- ${chunk.id}: pages ${pageRange(chunk.pageStart, chunk.pageEnd)}, ${chunk.charCount} chars`,
+    ),
+    "",
+    ...chunks.flatMap((chunk) => [
+      `## ${chunk.id}`,
+      "",
+      `Source pages: ${pageRange(chunk.pageStart, chunk.pageEnd)}`,
+      "",
+      formatCleanedTextForMarkdown(chunk.text),
+      "",
+    ]),
+  ];
 }
 
 function formatCleanedTextForMarkdown(text: string): string {
-  return text
-    .split("\n")
-    .map((line) => {
-      if (!line.trim()) return "";
-      if (looksLikeSectionHeading(line)) return `### ${line}`;
-      return line;
-    })
-    .join("\n");
+  const output: string[] = [];
+
+  for (const line of text.split("\n")) {
+    if (!line.trim()) {
+      output.push("");
+      continue;
+    }
+
+    if (looksLikeSectionHeading(line)) {
+      output.push(`### ${line}`);
+      continue;
+    }
+
+    if (shouldRecoverBullet(output[output.length - 1], line)) {
+      output.push(`- ${line}`);
+      continue;
+    }
+
+    output.push(line);
+  }
+
+  return output.join("\n");
+}
+
+function pageRange(start: number, end: number): string {
+  return start === end ? String(start) : `${start}-${end}`;
 }
 
 function looksLikeSectionHeading(line: string): boolean {
@@ -89,4 +139,13 @@ function looksLikeSectionHeading(line: string): boolean {
     words.length <= 8 &&
     words.every((word) => /^[A-Z0-9][A-Za-z0-9/&()+,-]*$/.test(word))
   );
+}
+
+function shouldRecoverBullet(previous: string | undefined, line: string): boolean {
+  if (!previous?.startsWith("- ")) return false;
+  if (line.startsWith("- ") || /^\d+[.)]\s/.test(line)) return false;
+  if (/[.!?:;。！？：；]$/.test(line)) return false;
+
+  const words = line.split(/\s+/).filter(Boolean);
+  return words.length > 0 && words.length <= 10;
 }
